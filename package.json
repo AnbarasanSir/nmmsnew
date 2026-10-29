@@ -5,7 +5,9 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "build:meta": "node build-metadata.js && node build-image-map.js"
+    "build": "node build-metadata.js && node build-image-map.js && node build-data-bundles.js",
+    "build:meta": "node build-metadata.js && node build-image-map.js && node build-data-bundles.js",
+    "deploy": "npx wrangler pages deploy ."
   },
   "keywords": [
     "nmms",
