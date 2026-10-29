@@ -653,6 +653,7 @@ class NMMSApp {
 
         arena.addEventListener('touchstart', (e) => {
             if (this.currentView !== 'arena') return;
+            if (e.target.closest('.palette-wrapper, .lightbox-modal, .modal-backdrop, .quiz-nav-footer, button, input')) return;
             const t = e.changedTouches[0];
             touchStartX = t.screenX;
             touchStartY = t.screenY;
