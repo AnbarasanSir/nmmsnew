@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="ta" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+    <meta name="theme-color" content="#4f46e5">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>NMMS Quiz Portal - 11,600+ Questions | என்.எம்.எம்.எஸ் வினா வங்கி</title>
+    <meta name="description" content="Comprehensive bilingual quiz practice portal for NMMS (National Means-cum-Merit Scholarship) Exam. Covers MAT, SAT Maths, Science, Social Science & 2017-2026 PYQ papers.">
+    
+    <!-- KaTeX Mathematical Equations Styling -->
+    <link rel="stylesheet" href="vendor/katex/katex.min.css">
+    
+    <!-- Application Styles -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header class="app-header">
+        <div class="header-container">
+            <div class="brand-wrapper" id="brand-link" title="Go to Home Dashboard">
+                <div class="brand-logo">🎓</div>
+                <div class="brand-info">
+                    <h1>NMMS QUIZ <span class="brand-tag">PORTAL</span></h1>
+                    <div class="brand-subtitle">என்.எம்.எம்.எஸ் உதவித்தொகை தேர்வுத் தளம்</div>
+                </div>
+            </div>
+
+            <div class="header-actions">
+                <!-- Bookmarks Hub -->
+                <button class="action-btn" id="btn-view-bookmarks" title="Saved Questions">
+                    <span>⭐</span>
+                    <span id="bmark-count-badge" class="badge-tag" style="background: #fef3c7; color: #92400e;">0</span>
+                </button>
+
+                <!-- History -->
+                <button class="action-btn" id="btn-view-history" title="Test History">
+                    <span>📜</span>
+                </button>
+
+                <!-- Language Toggle -->
+                <div class="lang-toggle" title="Switch Language">
+                    <button class="lang-btn active" data-lang="ta">தமிழ்</button>
+                    <button class="lang-btn" data-lang="en">EN</button>
+                    <button class="lang-btn" data-lang="both" title="Bilingual Mode">இருமொழி</button>
+                </div>
+
+                <!-- Theme Toggle -->
+                <button class="action-btn" id="btn-toggle-theme" title="Toggle Light/Dark Theme">
+                    <span id="theme-toggle-icon">🌙</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Views Container -->
+    <main class="app-main">
+
+        <!-- ============================================================== -->
+        <!-- VIEW 1: HOME DASHBOARD -->
+        <!-- ============================================================== -->
+        <section id="view-home" class="view-section active">
+            <!-- Hero Card -->
+            <div class="hero-card">
+                <div class="hero-content">
+                    <div class="hero-badge">
+                        <span>✨</span> NMMS தமிழ்நாடு அரசுப் பள்ளி மாணவர்களுக்கான வினா வங்கி
+                    </div>
+                    <h2 class="hero-title">என்.எம்.எம்.எஸ் உதவித்தொகைத் தேர்வுக்கான முழுமையான பயிற்சி தளம்</h2>
+                    <p class="hero-desc">
+                        11,600-க்கும் மேற்பட்ட வினாக்கள், தெளிவான விளக்கங்கள், வரைபடங்கள் மற்றும் 2017 முதல் 2026 வரையிலான அசல் முந்தைய ஆண்டு வினாத்தாள்களுடன் தேர்வில் வெற்றி பெற இன்றே பயிற்சி செய்யுங்கள்!
+                    </p>
+
+                    <div class="hero-stats-row">
+                        <div class="hero-stat-item">
+                            <span class="hero-stat-num">11,640+</span>
+                            <span class="hero-stat-label">வினாக்கள் (Questions)</span>
+                        </div>
+                        <div class="hero-stat-item">
+                            <span class="hero-stat-num">150</span>
+                            <span class="hero-stat-label">அலகுகள் (Units & Papers)</span>
+                        </div>
+                        <div class="hero-stat-item">
+                            <span class="hero-stat-num">18</span>
+                            <span class="hero-stat-label">அசல் தேர்வுகள் (PYQs)</span>
+                        </div>
+                    </div>
+
+                    <div class="hero-actions">
+                        <button class="btn-hero-primary" onclick="window.app.selectedSubjectId='matquiz'; window.app.renderSubjectExplorer('matquiz'); window.app.showView('subject');">
+                            <span>🧠</span> மனத்திறன் தேர்வு (MAT)
+                        </button>
+                        <button class="btn-hero-secondary" onclick="window.app.selectedSubjectId='pyq'; window.app.renderSubjectExplorer('pyq'); window.app.showView('subject');">
+                            <span>📜</span> முந்தைய ஆண்டு வினாத்தாள்கள் (PYQ)
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Progress Strip -->
+            <div class="progress-strip-card">
+                <div class="strip-item">
+                    <div class="strip-icon" style="background: rgba(79, 70, 229, 0.12); color: #4f46e5;">🎯</div>
+                    <div class="strip-details">
+                        <span class="strip-val" id="stat-tests-taken">0</span>
+                        <span class="strip-label">எழுதிய தேர்வுகள்</span>
+                    </div>
+                </div>
+                <div class="strip-item">
+                    <div class="strip-icon" style="background: rgba(16, 185, 129, 0.12); color: #10b981;">✅</div>
+                    <div class="strip-details">
+                        <span class="strip-val" id="stat-qs-answered">0</span>
+                        <span class="strip-label">பயிற்சி செய்தவை</span>
+                    </div>
+                </div>
+                <div class="strip-item">
+                    <div class="strip-icon" style="background: rgba(245, 158, 11, 0.12); color: #f59e0b;">📊</div>
+                    <div class="strip-details">
+                        <span class="strip-val" id="stat-accuracy">0%</span>
+                        <span class="strip-label">துல்லியம் (Accuracy)</span>
+                    </div>
+                </div>
+                <div class="strip-item">
+                    <div class="strip-icon" style="background: rgba(236, 72, 153, 0.12); color: #ec4899;">🔥</div>
+                    <div class="strip-details">
+                        <span class="strip-val" id="stat-streak">1 Day</span>
+                        <span class="strip-label">தொடர் பயிற்சி</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Subject Cards Section -->
+            <div class="section-header-row">
+                <h3 class="section-title">
+                    <span>📚</span> பாட வாரியான வினாத் தொகுப்புகள் (Subjects)
+                </h3>
+            </div>
+
+            <div class="subjects-grid" id="subjects-grid">
+                <!-- Dynamically generated by app.js -->
+            </div>
+        </section>
+
+        <!-- ============================================================== -->
+        <!-- VIEW 2: SUBJECT & UNITS EXPLORER -->
+        <!-- ============================================================== -->
+        <section id="view-subject" class="view-section">
+            <div class="breadcrumb-nav">
+                <span class="breadcrumb-link" id="breadcrumb-home-link">🏠 முகப்பு (Home)</span>
+                <span>/</span>
+                <span id="subject-breadcrumb-title">Subject</span>
+            </div>
+
+            <!-- Subject Banner -->
+            <div class="subject-banner">
+                <div class="subject-banner-left">
+                    <div class="subject-banner-icon" id="subject-banner-icon">📚</div>
+                    <div class="subject-banner-info">
+                        <h2 id="subject-banner-title">Subject Title</h2>
+                        <p id="subject-banner-desc">Loading unit details...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="filter-search-bar">
+                <div class="search-input-wrapper">
+                    <span>🔍</span>
+                    <input type="text" id="unit-search-input" class="search-input" placeholder="அலகுகள் அல்லது தலைப்புகளைத் தேடுக (Search unit or topic)...">
+                </div>
+            </div>
+
+            <!-- Units Grid -->
+            <div class="units-grid" id="units-grid">
+                <!-- Dynamically generated units cards -->
+            </div>
+        </section>
+
+        <!-- ============================================================== -->
+        <!-- VIEW 3: ACTIVE QUIZ ARENA (PLAYER) -->
+        <!-- ============================================================== -->
+        <section id="view-arena" class="view-section">
+            <div class="quiz-arena">
+                <!-- Top Bar -->
+                <div class="quiz-top-bar">
+                    <div class="quiz-info-left">
+                        <button class="quiz-exit-btn" id="btn-exit-quiz" title="Exit Quiz">✕</button>
+                        <div class="quiz-unit-header">
+                            <h3 id="arena-unit-title">Unit Title</h3>
+                            <span class="quiz-mode-pill" id="arena-mode-pill">Practice Mode</span>
+                        </div>
+                    </div>
+
+                    <div class="quiz-top-right">
+                        <div class="quiz-timer-box" id="quiz-timer-box">
+                            <span>⏱️</span>
+                            <span id="quiz-timer-text">00:00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Palette Strip (Horizontal on Mobile & Desktop) -->
+                <div class="palette-wrapper">
+                    <button class="palette-grid-btn" id="btn-open-palette-grid" title="View all questions in grid">
+                        <span>🎛️</span>
+                        <span class="btn-label-text">தட்டு</span>
+                    </button>
+                    <div class="palette-scroll-container" id="palette-scroll-container">
+                        <!-- Number bubbles generated dynamically -->
+                    </div>
+                </div>
+
+                <!-- Question Card -->
+                <div class="question-card" id="question-card">
+                    <div class="question-meta-bar">
+                        <div class="question-counter-badge">
+                            <span id="arena-question-counter">Q 1 / 10</span>
+                        </div>
+                        <div class="question-actions-top">
+                            <button class="icon-btn-toggle" id="btn-bookmark-question" title="Bookmark Question">
+                                ☆
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Question Text -->
+                    <div class="question-text-box" id="question-text-box">
+                        Loading question...
+                    </div>
+
+                    <!-- Diagram / Image -->
+                    <div class="question-image-box" id="question-image-box" style="display: none;">
+                        <img id="question-diagram-img" class="question-diagram-img" alt="Question Diagram">
+                        <div class="diagram-hint">🔍 படத்தை பெரிதாக்க கிளிக் செய்க (Click to zoom)</div>
+                    </div>
+
+                    <!-- Options Grid -->
+                    <div class="options-grid" id="options-grid">
+                        <!-- Option buttons -->
+                    </div>
+
+                    <!-- Explanation Box -->
+                    <div class="explanation-card" id="explanation-card">
+                        <div class="explanation-header">
+                            <span>💡</span> விளக்கம் (Detailed Explanation):
+                        </div>
+                        <div class="explanation-body" id="explanation-body">
+                            Explanation text here...
+                        </div>
+                        <div class="explanation-img-box" id="explanation-img-box" style="display: none;">
+                            <img id="explanation-img" class="explanation-img" alt="Explanation Diagram">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom Navigation -->
+                <div class="quiz-nav-footer">
+                    <button class="nav-btn btn-prev" id="btn-prev-question">
+                        ← <span>முந்தையது (Prev)</span>
+                    </button>
+
+                    <button class="nav-btn btn-flag" id="btn-flag-question" title="Mark for Review">
+                        ★ <span>குறிக்க (Review)</span>
+                    </button>
+
+                    <button class="nav-btn btn-next" id="btn-next-question">
+                        <span>அடுத்தது (Next)</span> →
+                    </button>
+
+                    <button class="nav-btn btn-submit-exam" id="btn-submit-exam" style="display: none;">
+                        ✓ <span>முடிக்க (Submit)</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================== -->
+        <!-- VIEW 4: RESULTS & PERFORMANCE REVIEW -->
+        <!-- ============================================================== -->
+        <section id="view-results" class="view-section">
+            <div class="results-card">
+                <div class="trophy-badge" id="results-trophy">🏆</div>
+                <h2 id="results-title">90% Score</h2>
+                <p class="results-subtitle" id="results-subtitle">Congratulations! Outstanding Performance!</p>
+
+                <!-- Donut Chart -->
+                <div class="score-chart-wrapper">
+                    <div class="score-chart-pie" id="score-chart-pie"></div>
+                    <div class="score-chart-center">
+                        <span class="score-center-number" id="score-center-number">9</span>
+                        <span class="score-center-total" id="score-center-total">/ 10</span>
+                    </div>
+                </div>
+
+                <!-- Score Stats Grid -->
+                <div class="score-stats-grid">
+                    <div class="score-stat-box correct">
+                        <div class="score-stat-num" id="res-correct-count">0</div>
+                        <div class="score-stat-label">சரியானவை (Correct)</div>
+                    </div>
+                    <div class="score-stat-box wrong">
+                        <div class="score-stat-num" id="res-wrong-count">0</div>
+                        <div class="score-stat-label">தவறானவை (Wrong)</div>
+                    </div>
+                    <div class="score-stat-box skipped">
+                        <div class="score-stat-num" id="res-unattempted-count">0</div>
+                        <div class="score-stat-label">விடுபட்டவை (Skipped)</div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="results-actions-row">
+                    <button class="btn-result-action btn-retake" id="btn-retake-full">
+                        🔄 மீண்டும் எழுத (Retake)
+                    </button>
+                    <button class="btn-result-action btn-wrong-only" id="btn-retake-wrong">
+                        🔁 தவறானவற்றை மட்டும் பயிற்சி செய்
+                    </button>
+                    <button class="btn-result-action btn-home-return" id="btn-results-home">
+                        🏠 அலகுகளுக்குச் செல்ல (Back)
+                    </button>
+                </div>
+
+                <!-- Solutions Review Section -->
+                <div class="review-section">
+                    <div class="section-header-row">
+                        <h3 class="section-title">
+                            <span>📋</span> விரிவான விடைகள் மற்றும் விளக்கங்கள் (Solutions)
+                        </h3>
+                    </div>
+
+                    <div class="review-filter-pills">
+                        <button class="filter-pill review-pill active" data-filter="all">அனைத்தும் (All)</button>
+                        <button class="filter-pill review-pill" data-filter="wrong">தவறானவை (Mistakes)</button>
+                        <button class="filter-pill review-pill" data-filter="correct">சரியானவை (Correct)</button>
+                        <button class="filter-pill review-pill" data-filter="skipped">விடுபட்டவை (Skipped)</button>
+                    </div>
+
+                    <div id="review-cards-container">
+                        <!-- Dynamically filled with review cards -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================== -->
+        <!-- VIEW 5: BOOKMARKS HUB -->
+        <!-- ============================================================== -->
+        <section id="view-bookmarks" class="view-section">
+            <div class="breadcrumb-nav">
+                <span class="breadcrumb-link" onclick="window.app.showView('home')">🏠 முகப்பு (Home)</span>
+                <span>/</span>
+                <span>⭐ சேமிக்கப்பட்ட வினாக்கள் (Saved Questions)</span>
+            </div>
+
+            <div class="section-header-row">
+                <h3 class="section-title">
+                    <span>⭐</span> நீங்கள் சேமித்த முக்கிய வினாக்கள்
+                </h3>
+            </div>
+
+            <div id="bookmarks-cards-container">
+                <!-- Bookmarked questions list -->
+            </div>
+        </section>
+
+        <!-- ============================================================== -->
+        <!-- VIEW 6: TEST HISTORY -->
+        <!-- ============================================================== -->
+        <section id="view-history" class="view-section">
+            <div class="breadcrumb-nav">
+                <span class="breadcrumb-link" onclick="window.app.showView('home')">🏠 முகப்பு (Home)</span>
+                <span>/</span>
+                <span>📜 தேர்வு வரலாறு (Test History)</span>
+            </div>
+
+            <div class="section-header-row">
+                <h3 class="section-title">
+                    <span>📜</span> முந்தைய தேர்வு முயற்சிகள் மற்றும் மதிப்பெண்கள்
+                </h3>
+            </div>
+
+            <div id="history-cards-container">
+                <!-- History list -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- ============================================================== -->
+    <!-- MODAL: QUIZ SETUP CONFIGURATION -->
+    <!-- ============================================================== -->
+    <div class="modal-backdrop" id="quiz-setup-modal">
+        <div class="modal-dialog">
+            <div class="modal-header">
+                <h3 id="setup-modal-title">Quiz Settings</h3>
+                <button class="modal-close-btn" id="btn-close-setup-modal">✕</button>
+            </div>
+
+            <div class="modal-body">
+                <!-- Select Mode -->
+                <div>
+                    <label class="setup-group-label">🎯 தேர்வு முறையைத் தேர்ந்தெடுக்கவும் (Select Mode):</label>
+                    <div class="mode-selector-grid">
+                        <div class="mode-option-card selected" data-mode="practice">
+                            <span class="mode-icon">⚡</span>
+                            <span class="mode-title">பயிற்சி முறை (Practice)</span>
+                            <span class="mode-desc">உடனடி விடை சரிபார்ப்பு மற்றும் விளக்கங்கள்.</span>
+                        </div>
+                        <div class="mode-option-card" data-mode="exam">
+                            <span class="mode-icon">⏱️</span>
+                            <span class="mode-title">தேர்வு முறை (Exam)</span>
+                            <span class="mode-desc">நேரக் கட்டுப்பாடு, கேள்வி தட்டு & இறுதி மதிப்பெண்.</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Select Question Count -->
+                <div>
+                    <label class="setup-group-label">📝 வினாக்களின் எண்ணிக்கை (Question Count):</label>
+                    <div class="pill-group">
+                        <button class="setup-pill count-pill" data-count="10">10 வினாக்கள்</button>
+                        <button class="setup-pill count-pill active" data-count="20">20 வினாக்கள்</button>
+                        <button class="setup-pill count-pill" data-count="50">50 வினாக்கள்</button>
+                        <button class="setup-pill count-pill" data-count="all">அனைத்தும் (All)</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn-start-launch" id="btn-launch-quiz-modal">
+                    <span>⚡</span> வினாடி வினாவைத் தொடங்கு (Start Quiz)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- MODAL: LIGHTBOX IMAGE ZOOM -->
+    <!-- ============================================================== -->
+    <div class="lightbox-modal" id="lightbox-modal">
+        <button class="lightbox-close" id="lightbox-close-btn">✕</button>
+        <img id="lightbox-img" class="lightbox-img" alt="Zoomed Diagram">
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- MODAL: FULL QUESTION PALETTE GRID -->
+    <!-- ============================================================== -->
+    <div class="modal-backdrop" id="palette-grid-modal">
+        <div class="modal-dialog palette-grid-dialog">
+            <div class="modal-header">
+                <h3>வினாத் தட்டு (Questions Navigator)</h3>
+                <button class="modal-close-btn" id="btn-close-palette-modal">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="palette-legend-strip">
+                    <span class="legend-badge answered">✓ விடையளித்தவை</span>
+                    <span class="legend-badge flagged">★ குறித்தவை</span>
+                    <span class="legend-badge current">● தற்போதையது</span>
+                    <span class="legend-badge unattempted">○ விடுபட்டவை</span>
+                </div>
+                <div class="palette-full-grid" id="palette-full-grid">
+                    <!-- Dynamic grid of questions -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Scripts (All Self-Contained & Offline-Ready) -->
+    <script src="vendor/katex/katex.min.js"></script>
+    <script src="vendor/katex/auto-render.min.js"></script>
+    <script src="js/metadata.js"></script>
+    <script src="js/image-map.js"></script>
+    <script src="js/data/matquiz.js"></script>
+    <script src="js/quiz-engine.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>

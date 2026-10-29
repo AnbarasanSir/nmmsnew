@@ -1,0 +1,20 @@
+{
+  "name": "nmms-quiz-website",
+  "version": "1.0.0",
+  "description": "Comprehensive Bilingual Quiz Platform for NMMS Scholarship Examination (11,600+ Questions)",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "build:meta": "node build-metadata.js && node build-image-map.js"
+  },
+  "keywords": [
+    "nmms",
+    "quiz",
+    "education",
+    "tamil-nadu",
+    "mat",
+    "sat"
+  ],
+  "author": "NMMS Quiz Team",
+  "license": "MIT"
+}
