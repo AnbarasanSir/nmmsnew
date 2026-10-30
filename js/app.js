@@ -85,6 +85,29 @@ class NMMSApp {
             target.classList.add('active');
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
+
+        // Manage Bottom Tab Bar and Header for Arena mode vs Standard views
+        const tabbar = document.getElementById('bottom-tab-bar');
+        const header = document.getElementById('app-header');
+
+        if (viewId === 'arena') {
+            document.body.classList.add('in-arena-mode');
+            if (tabbar) tabbar.classList.add('hidden');
+            if (header) header.style.display = 'none';
+        } else {
+            document.body.classList.remove('in-arena-mode');
+            if (tabbar) tabbar.classList.remove('hidden');
+            if (header) header.style.display = '';
+
+            // Update bottom tab bar active states
+            const homeTab = document.getElementById('tab-home');
+            const bmarkTab = document.getElementById('btn-view-bookmarks');
+            const histTab = document.getElementById('btn-view-history');
+
+            if (homeTab) homeTab.classList.toggle('active', viewId === 'home');
+            if (bmarkTab) bmarkTab.classList.toggle('active', viewId === 'bookmarks');
+            if (histTab) histTab.classList.toggle('active', viewId === 'history');
+        }
     }
 
     // ==========================================
@@ -1239,7 +1262,10 @@ class NMMSApp {
             });
         });
 
-        // Bookmarks & History navigation buttons in header
+        // Bookmarks & History navigation buttons (tab bar & links)
+        document.getElementById('tab-home')?.addEventListener('click', () => {
+            this.showView('home');
+        });
         document.getElementById('btn-view-bookmarks')?.addEventListener('click', () => {
             this.renderBookmarksView();
             this.showView('bookmarks');

@@ -19,7 +19,7 @@
 <body>
 
     <!-- Header Navigation -->
-    <header class="app-header">
+    <header class="app-header" id="app-header">
         <div class="header-container">
             <div class="brand-wrapper" id="brand-link" title="Go to Home Dashboard">
                 <div class="brand-logo">🎓</div>
@@ -30,22 +30,11 @@
             </div>
 
             <div class="header-actions">
-                <!-- Bookmarks Hub -->
-                <button class="action-btn" id="btn-view-bookmarks" title="Saved Questions">
-                    <span>⭐</span>
-                    <span id="bmark-count-badge" class="badge-tag" style="background: #fef3c7; color: #92400e;">0</span>
-                </button>
-
-                <!-- History -->
-                <button class="action-btn" id="btn-view-history" title="Test History">
-                    <span>📜</span>
-                </button>
-
                 <!-- Language Toggle -->
                 <div class="lang-toggle" title="Switch Language">
                     <button class="lang-btn active" data-lang="ta">தமிழ்</button>
                     <button class="lang-btn" data-lang="en">EN</button>
-                    <button class="lang-btn" data-lang="both" title="Bilingual Mode">இருமொழி</button>
+                    <button class="lang-btn" data-lang="both" title="Bilingual Mode">இரு</button>
                 </div>
 
                 <!-- Theme Toggle -->
@@ -67,11 +56,11 @@
             <div class="hero-card">
                 <div class="hero-content">
                     <div class="hero-badge">
-                        <span>✨</span> NMMS தமிழ்நாடு அரசுப் பள்ளி மாணவர்களுக்கான வினா வங்கி
+                        <span>✨</span> NMMS தமிழ்நாடு வினா வங்கி
                     </div>
                     <h2 class="hero-title">என்.எம்.எம்.எஸ் உதவித்தொகைத் தேர்வுக்கான முழுமையான பயிற்சி தளம்</h2>
                     <p class="hero-desc">
-                        11,600-க்கும் மேற்பட்ட வினாக்கள், தெளிவான விளக்கங்கள், வரைபடங்கள் மற்றும் 2017 முதல் 2026 வரையிலான அசல் முந்தைய ஆண்டு வினாத்தாள்களுடன் தேர்வில் வெற்றி பெற இன்றே பயிற்சி செய்யுங்கள்!
+                        11,600-க்கும் மேற்பட்ட வினாக்கள், தெளிவான விளக்கங்கள், வரைபடங்கள் மற்றும் 2017 முதல் 2026 வரையிலான அசல் முந்தைய ஆண்டு வினாத்தாள்களுடன் பயிற்சி செய்யுங்கள்!
                     </p>
 
                     <div class="hero-stats-row">
@@ -149,7 +138,7 @@
         <!-- ============================================================== -->
         <section id="view-subject" class="view-section">
             <div class="breadcrumb-nav">
-                <span class="breadcrumb-link" id="breadcrumb-home-link">🏠 முகப்பு (Home)</span>
+                <span class="breadcrumb-link" id="breadcrumb-home-link">← முகப்பு (Home)</span>
                 <span>/</span>
                 <span id="subject-breadcrumb-title">Subject</span>
             </div>
@@ -169,7 +158,7 @@
             <div class="filter-search-bar">
                 <div class="search-input-wrapper">
                     <span>🔍</span>
-                    <input type="text" id="unit-search-input" class="search-input" placeholder="அலகுகள் அல்லது தலைப்புகளைத் தேடுக (Search unit or topic)...">
+                    <input type="text" id="unit-search-input" class="search-input" placeholder="அலகுகள் அல்லது தலைப்புகளைத் தேடுக (Search)...">
                 </div>
             </div>
 
@@ -259,19 +248,19 @@
                 <!-- Bottom Navigation -->
                 <div class="quiz-nav-footer">
                     <button class="nav-btn btn-prev" id="btn-prev-question">
-                        ← <span>முந்தையது (Prev)</span>
+                        ← <span>முந்தையது</span>
                     </button>
 
                     <button class="nav-btn btn-flag" id="btn-flag-question" title="Mark for Review">
-                        ★ <span>குறிக்க (Review)</span>
+                        ★ <span>குறிக்க</span>
                     </button>
 
                     <button class="nav-btn btn-next" id="btn-next-question">
-                        <span>அடுத்தது (Next)</span> →
+                        <span>அடுத்தது</span> →
                     </button>
 
                     <button class="nav-btn btn-submit-exam" id="btn-submit-exam" style="display: none;">
-                        ✓ <span>முடிக்க (Submit)</span>
+                        ✓ <span>முடிக்க</span>
                     </button>
                 </div>
             </div>
@@ -351,7 +340,7 @@
         <!-- ============================================================== -->
         <section id="view-bookmarks" class="view-section">
             <div class="breadcrumb-nav">
-                <span class="breadcrumb-link" onclick="window.app.showView('home')">🏠 முகப்பு (Home)</span>
+                <span class="breadcrumb-link" onclick="window.app.showView('home')">← முகப்பு (Home)</span>
                 <span>/</span>
                 <span>⭐ சேமிக்கப்பட்ட வினாக்கள் (Saved Questions)</span>
             </div>
@@ -372,7 +361,7 @@
         <!-- ============================================================== -->
         <section id="view-history" class="view-section">
             <div class="breadcrumb-nav">
-                <span class="breadcrumb-link" onclick="window.app.showView('home')">🏠 முகப்பு (Home)</span>
+                <span class="breadcrumb-link" onclick="window.app.showView('home')">← முகப்பு (Home)</span>
                 <span>/</span>
                 <span>📜 தேர்வு வரலாறு (Test History)</span>
             </div>
@@ -390,11 +379,28 @@
 
     </main>
 
+    <!-- Bottom Tab Bar -->
+    <nav class="bottom-tab-bar" id="bottom-tab-bar">
+        <button class="tab-item active" id="tab-home" title="Home">
+            <span class="tab-icon">🏠</span>
+            <span class="tab-label">முகப்பு</span>
+        </button>
+        <button class="tab-item" id="btn-view-bookmarks" title="Saved Questions">
+            <span class="tab-icon">⭐</span>
+            <span class="tab-label">சேமித்தவை <span id="bmark-count-badge" class="tab-badge">0</span></span>
+        </button>
+        <button class="tab-item" id="btn-view-history" title="Test History">
+            <span class="tab-icon">📜</span>
+            <span class="tab-label">வரலாறு</span>
+        </button>
+    </nav>
+
     <!-- ============================================================== -->
     <!-- MODAL: QUIZ SETUP CONFIGURATION -->
     <!-- ============================================================== -->
     <div class="modal-backdrop" id="quiz-setup-modal">
         <div class="modal-dialog">
+            <div class="sheet-handle"></div>
             <div class="modal-header">
                 <h3 id="setup-modal-title">Quiz Settings</h3>
                 <button class="modal-close-btn" id="btn-close-setup-modal">✕</button>
@@ -419,7 +425,7 @@
                 </div>
 
                 <!-- Select Question Count -->
-                <div>
+                <div style="margin-top: 16px;">
                     <label class="setup-group-label">📝 வினாக்களின் எண்ணிக்கை (Question Count):</label>
                     <div class="pill-group">
                         <button class="setup-pill count-pill" data-count="10">10 வினாக்கள்</button>
@@ -451,6 +457,7 @@
     <!-- ============================================================== -->
     <div class="modal-backdrop" id="palette-grid-modal">
         <div class="modal-dialog palette-grid-dialog">
+            <div class="sheet-handle"></div>
             <div class="modal-header">
                 <h3>வினாத் தட்டு (Questions Navigator)</h3>
                 <button class="modal-close-btn" id="btn-close-palette-modal">✕</button>
