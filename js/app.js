@@ -31,9 +31,6 @@ class NMMSApp {
         this.setupKeyboardShortcuts();
         this.setupSwipeNavigation();
         this.updateUserStatsDisplay();
-
-        // Pre-warm MAT questions in background
-        this.loadSubjectScript('matquiz');
     }
 
     // ==========================================
@@ -285,9 +282,6 @@ class NMMSApp {
         if (!window.NMMS_CATALOG || !window.NMMS_CATALOG.subjects[subjectId]) return;
         const sub = window.NMMS_CATALOG.subjects[subjectId];
 
-        // Pre-warm data bundle in background
-        this.loadSubjectScript(subjectId);
-
         // Update banner
         const iconElem = document.getElementById('subject-banner-icon');
         const titleElem = document.getElementById('subject-banner-title');
@@ -437,20 +431,33 @@ class NMMSApp {
         const apiUrl = `/api/quiz/questions?subject=${encodeURIComponent(subjectId)}&unit=${encodeURIComponent(cleanUnit)}`;
         try {
             const response = await fetch(apiUrl);
-            if (!response.ok) {
-                throw new Error(`Server returned HTTP ${response.status}`);
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success && Array.isArray(data.questions) && data.questions.length > 0) {
+                    this.dataCache[cacheKey] = data.questions;
+                    return data.questions;
+                }
             }
-            const data = await response.json();
-            if (data.success && Array.isArray(data.questions) && data.questions.length > 0) {
-                this.dataCache[cacheKey] = data.questions;
-                return data.questions;
-            } else {
-                throw new Error(data.error || 'Failed to load questions from secure API');
-            }
-        } catch (err) {
-            console.error('[NMMS] Secure API load failed:', err);
-            throw err;
+        } catch (apiErr) {
+            console.warn('[NMMS] Secure API not reachable, falling back to local file fetch:', apiErr);
         }
+
+        // 3. Fallback to direct file fetch (for static live server / offline testing)
+        const filePath = unit.file || `assets/${subjectId}/data/${cleanUnit}.json`;
+        try {
+            const response = await fetch(filePath);
+            if (response.ok) {
+                const rawData = await response.json();
+                if (Array.isArray(rawData) && rawData.length > 0) {
+                    this.dataCache[cacheKey] = rawData;
+                    return rawData;
+                }
+            }
+        } catch (fileErr) {
+            console.warn('[NMMS] Direct file fetch failed:', fileErr);
+        }
+
+        throw new Error('Unable to load questions for ' + cleanUnit);
     }
 
     // ==========================================
@@ -893,19 +900,32 @@ class NMMSApp {
                 })
             });
 
-            if (!response.ok) {
-                throw new Error('Server returned HTTP ' + response.status);
-            }
-
-            const checkData = await response.json();
-            if (checkData.success) {
-                this.quizEngine.applyServerCheck(this.quizEngine.currentIndex, checkData);
-                this.playSound(checkData.isCorrect ? 'correct' : 'wrong');
-            } else {
-                throw new Error(checkData.error || 'Failed to verify answer');
+            if (response.ok) {
+                const checkData = await response.json();
+                if (checkData.success) {
+                    this.quizEngine.applyServerCheck(this.quizEngine.currentIndex, checkData);
+                    this.playSound(checkData.isCorrect ? 'correct' : 'wrong');
+                    this.renderCurrentQuestion();
+                    this.updatePaletteActiveState();
+                    return;
+                }
             }
         } catch (err) {
-            console.error('Check answer error:', err);
+            console.warn('[NMMS] API check endpoint not reachable, checking local question:', err);
+        }
+
+        // Fallback for static/offline preview if question has local correct property
+        if (typeof q.correct === 'number') {
+            const checkData = {
+                isCorrect: opt.originalIndex === q.correct,
+                correctIndex: q.correct,
+                explanation: q.explanation || q.explanation_en || '',
+                explanation_en: q.explanation_en || q.explanation || '',
+                explanationImage: q.explanationImage || null
+            };
+            this.quizEngine.applyServerCheck(this.quizEngine.currentIndex, checkData);
+            this.playSound(checkData.isCorrect ? 'correct' : 'wrong');
+        } else {
             this.showToast(this.language === 'ta' ? 'விடை சரிபார்ப்பில் பிழை ஏற்பட்டது!' : 'Error verifying answer with server!', 'danger');
         }
 
@@ -946,21 +966,19 @@ class NMMSApp {
                 })
             });
 
-            if (!response.ok) {
-                throw new Error(`Server returned HTTP ${response.status}`);
-            }
-
-            const data = await response.json();
-            if (data.success && data.results) {
-                this.quizEngine.applyExamResults(data.results, autoSubmitted);
-            } else {
-                throw new Error(data.error || 'Failed to compute exam results');
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success && data.results) {
+                    this.quizEngine.applyExamResults(data.results, autoSubmitted);
+                    return;
+                }
             }
         } catch (err) {
-            console.error('Submit exam error:', err);
-            this.showToast(this.language === 'ta' ? 'முடிவுகளை கணக்கிடுவதில் பிழை ஏற்பட்டது!' : 'Error calculating results with server!', 'danger');
-            this.quizEngine.submitQuiz(autoSubmitted); // Fallback
+            console.warn('[NMMS] API submit endpoint not reachable, evaluating locally:', err);
         }
+
+        // Fallback evaluation
+        this.quizEngine.submitQuiz(autoSubmitted);
     }
 
     updateBookmarkButtonState(question) {
@@ -1459,6 +1477,8 @@ class NMMSApp {
         });
     }
 }
+
+window.NMMSApp = NMMSApp;
 
 // Instantiate on DOM ready
 document.addEventListener('DOMContentLoaded', () => {

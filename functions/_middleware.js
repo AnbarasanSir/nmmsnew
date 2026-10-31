@@ -1,6 +1,6 @@
 export async function onRequest(context) {
     const url = new URL(context.request.url);
-    const path = url.pathname;
+    const path = url.pathname.toLowerCase();
 
     // Allow internal requests from our own API functions
     const internalSecret = context.request.headers.get('x-internal-secret');
@@ -8,8 +8,15 @@ export async function onRequest(context) {
         return context.next();
     }
 
-    // Security Gate: Block direct external browser access to raw question files or bundles
-    if (path.includes('/data/') || path.startsWith('/js/data/')) {
+    // Security Gate: Block direct external browser access to raw question files or legacy bundles
+    if (
+        path.includes('/data/') ||
+        path.includes('matquiz.js') ||
+        path.includes('pyq.js') ||
+        path.includes('satmaths.js') ||
+        path.includes('satscience.js') ||
+        path.includes('satsocial.js')
+    ) {
         return new Response(JSON.stringify({
             success: false,
             error: 'Access Denied: Direct file download of question database is strictly prohibited.'
@@ -17,11 +24,10 @@ export async function onRequest(context) {
             status: 403,
             headers: {
                 'Content-Type': 'application/json; charset=utf-8',
-                'Cache-Control': 'no-store'
+                'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0'
             }
         });
     }
 
     return context.next();
 }
-
