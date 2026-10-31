@@ -846,16 +846,29 @@ class NMMSApp {
         const nextBtn = document.getElementById('btn-next-question');
         const submitBtn = document.getElementById('btn-submit-exam');
 
-        if (prevBtn) prevBtn.disabled = currIdx === 0;
+        if (prevBtn) {
+            prevBtn.disabled = currIdx === 0;
+            const prevLabel = this.language === 'en' ? 'Previous' : 'முந்தையது';
+            prevBtn.innerHTML = `← <span>${prevLabel}</span>`;
+        }
 
+        if (nextBtn) {
+            const nextLabel = this.language === 'en' ? 'Next' : 'அடுத்தது';
+            nextBtn.innerHTML = `<span>${nextLabel}</span> →`;
+        }
+
+        if (submitBtn) {
+            const submitLabel = this.language === 'en' ? 'Finish' : 'முடிக்க';
+            submitBtn.innerHTML = `✓ <span>${submitLabel}</span>`;
+        }
+
+        // On the last question, show "முடிக்க" (Finish) instead of "அடுத்தது" (Next) in both modes
         if (currIdx === total - 1) {
             if (nextBtn) nextBtn.style.display = 'none';
             if (submitBtn) submitBtn.style.display = 'inline-flex';
         } else {
             if (nextBtn) nextBtn.style.display = 'inline-flex';
-            if (submitBtn) {
-                submitBtn.style.display = this.quizEngine.config.mode === 'exam' ? 'inline-flex' : 'none';
-            }
+            if (submitBtn) submitBtn.style.display = 'none';
         }
 
         // Render Math equations with KaTeX
