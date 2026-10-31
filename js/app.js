@@ -777,8 +777,7 @@ class NMMSApp {
                 imgElem.src = q.image;
                 imgElem.style.display = 'inline-block';
                 imgBox.style.display = 'block';
-
-                imgElem.onclick = () => this.openLightbox(q.image);
+                imgElem.onclick = null;
                 imgElem.onerror = () => {
                     imgBox.style.display = 'none'; // gracefully hide if truly missing
                 };
@@ -859,7 +858,7 @@ class NMMSApp {
                 if (q.explanationImage && expImg && expImgBox) {
                     expImg.src = q.explanationImage;
                     expImgBox.style.display = 'block';
-                    expImg.onclick = () => this.openLightbox(q.explanationImage);
+                    expImg.onclick = null;
                 } else if (expImgBox) {
                     expImgBox.style.display = 'none';
                 }

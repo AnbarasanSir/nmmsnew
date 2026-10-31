@@ -1203,18 +1203,14 @@ body.in-arena-mode .app-main {
 }
 
 .question-diagram-img {
-  max-height: 220px;
+  max-height: 240px;
   margin: 0 auto;
   border-radius: var(--radius-sm);
-  cursor: zoom-in;
+  cursor: default;
+  pointer-events: none;
   object-fit: contain;
-}
-
-.diagram-hint {
-  font-size: 0.68rem;
-  color: var(--text-muted);
-  margin-top: 6px;
-  font-weight: 600;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 /* Options Grid & Native Buttons */

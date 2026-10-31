@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ta" data-theme="light">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
@@ -7,15 +8,17 @@
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <title>NMMS Quiz Portal - 11,600+ Questions | என்.எம்.எம்.எஸ் வினா வங்கி</title>
-    <meta name="description" content="Comprehensive bilingual quiz practice portal for NMMS (National Means-cum-Merit Scholarship) Exam. Covers MAT, SAT Maths, Science, Social Science & 2017-2026 PYQ papers.">
-    
+    <title>NMMS Quiz Portal - 11,600+ Questions | NMMS வினா வங்கி</title>
+    <meta name="description"
+        content="Comprehensive bilingual quiz practice portal for NMMS (National Means-cum-Merit Scholarship) Exam. Covers MAT, SAT Maths, Science, Social Science & 2017-2026 PYQ papers.">
+
     <!-- KaTeX Mathematical Equations Styling -->
     <link rel="stylesheet" href="vendor/katex/katex.min.css">
-    
+
     <!-- Application Styles -->
     <link rel="stylesheet" href="css/style.css">
 </head>
+
 <body>
 
     <!-- Header Navigation -->
@@ -25,7 +28,7 @@
                 <div class="brand-logo">🎓</div>
                 <div class="brand-info">
                     <h1>NMMS QUIZ <span class="brand-tag">PORTAL</span></h1>
-                    <div class="brand-subtitle">என்.எம்.எம்.எஸ் உதவித்தொகை தேர்வுத் தளம்</div>
+                    <div class="brand-subtitle">NMMS உதவித்தொகை தேர்வுத் தளம்</div>
                 </div>
             </div>
 
@@ -65,7 +68,8 @@
                     </div>
                     <h2 class="hero-title">என்.எம்.எம்.எஸ் உதவித்தொகைத் தேர்வுக்கான முழுமையான பயிற்சி தளம்</h2>
                     <p class="hero-desc">
-                        11,600-க்கும் மேற்பட்ட வினாக்கள், தெளிவான விளக்கங்கள், வரைபடங்கள் மற்றும் 2017 முதல் 2026 வரையிலான அசல் முந்தைய ஆண்டு வினாத்தாள்களுடன் பயிற்சி செய்யுங்கள்!
+                        11,600-க்கும் மேற்பட்ட வினாக்கள், தெளிவான விளக்கங்கள், வரைபடங்கள் மற்றும் 2017 முதல் 2026
+                        வரையிலான அசல் முந்தைய ஆண்டு வினாத்தாள்களுடன் பயிற்சி செய்யுங்கள்!
                     </p>
 
                     <div class="hero-stats-row">
@@ -84,10 +88,12 @@
                     </div>
 
                     <div class="hero-actions">
-                        <button class="btn-hero-primary" onclick="window.app.selectedSubjectId='matquiz'; window.app.renderSubjectExplorer('matquiz'); window.app.showView('subject');">
+                        <button class="btn-hero-primary"
+                            onclick="window.app.selectedSubjectId='matquiz'; window.app.renderSubjectExplorer('matquiz'); window.app.showView('subject');">
                             <span>🧠</span> மனத்திறன் தேர்வு (MAT)
                         </button>
-                        <button class="btn-hero-secondary" onclick="window.app.selectedSubjectId='pyq'; window.app.renderSubjectExplorer('pyq'); window.app.showView('subject');">
+                        <button class="btn-hero-secondary"
+                            onclick="window.app.selectedSubjectId='pyq'; window.app.renderSubjectExplorer('pyq'); window.app.showView('subject');">
                             <span>📜</span> முந்தைய ஆண்டு வினாத்தாள்கள் (PYQ)
                         </button>
                     </div>
@@ -163,7 +169,8 @@
             <div class="filter-search-bar">
                 <div class="search-input-wrapper">
                     <span>🔍</span>
-                    <input type="text" id="unit-search-input" class="search-input" placeholder="அலகுகள் அல்லது தலைப்புகளைத் தேடுக (Search)...">
+                    <input type="text" id="unit-search-input" class="search-input"
+                        placeholder="அலகுகள் அல்லது தலைப்புகளைத் தேடுக (Search)...">
                 </div>
             </div>
 
@@ -494,9 +501,9 @@
 
     <!-- Client-side Anti-Copy & Anti-Inspection Protection -->
     <script>
-        (function() {
+        (function () {
             // Prevent right click
-            document.addEventListener('contextmenu', function(e) {
+            document.addEventListener('contextmenu', function (e) {
                 // Allow right click only on editable inputs if any
                 if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
                     e.preventDefault();
@@ -504,12 +511,12 @@
             });
 
             // Prevent DevTools & save/print shortcuts
-            document.addEventListener('keydown', function(e) {
+            document.addEventListener('keydown', function (e) {
                 if (
-                    e.key === 'F12' || 
-                    (e.ctrlKey && (e.key === 'u' || e.key === 'U')) || 
-                    (e.ctrlKey && (e.key === 's' || e.key === 'S')) || 
-                    (e.ctrlKey && (e.key === 'p' || e.key === 'P')) || 
+                    e.key === 'F12' ||
+                    (e.ctrlKey && (e.key === 'u' || e.key === 'U')) ||
+                    (e.ctrlKey && (e.key === 's' || e.key === 'S')) ||
+                    (e.ctrlKey && (e.key === 'p' || e.key === 'P')) ||
                     (e.ctrlKey && e.shiftKey && ['i', 'I', 'j', 'J', 'c', 'C'].includes(e.key))
                 ) {
                     e.preventDefault();
@@ -519,4 +526,5 @@
         })();
     </script>
 </body>
+
 </html>
