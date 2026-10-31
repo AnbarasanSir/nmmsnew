@@ -1,7 +1,8 @@
 /**
- * NMMS Quiz Engine
+ * NMMS Quiz Engine (Secure Backend-Connected Version)
  * Handles quiz state, question rendering, KaTeX math typesetting,
  * image path resolution, practice/exam mode logic, and scoring.
+ * Questions are securely sanitized from server API.
  */
 
 class QuizEngine {
@@ -19,7 +20,7 @@ class QuizEngine {
             timeLimitMinutes: 0 // 0 for count-up timer, >0 for countdown
         };
 
-        this.userAnswers = {}; // { questionIndex: { selectedOptionIndex: number, isCorrect: boolean, timeSpent: number } }
+        this.userAnswers = {}; // { questionIndex: { selectedOptionIndex: number, selectedOriginalIndex: number, isCorrect: boolean } }
         this.flagged = new Set();
         this.startTime = null;
         this.timerInterval = null;
@@ -30,10 +31,11 @@ class QuizEngine {
         this.onQuestionChange = null;
         this.onTimerTick = null;
         this.onQuizComplete = null;
+        this.onSubmitExam = null; // Called when exam needs server submission (e.g. timeout)
     }
 
     /**
-     * Initialize quiz with raw JSON question list and user config
+     * Initialize quiz with sanitized question list from server and user config
      */
     init(rawQuestions, config) {
         this.config = { ...this.config, ...config };
@@ -47,17 +49,16 @@ class QuizEngine {
             const optionsTa = Array.isArray(q.options) ? q.options : [];
             const optionsEn = Array.isArray(q.options_en) ? q.options_en : [];
 
-            // Robust correct index calculation (handling 0-indexed and 1-indexed anomalies)
-            let correctIdx = typeof q.correct === 'number' ? q.correct : 0;
-            if (correctIdx >= optionsTa.length && optionsTa.length > 0) {
-                correctIdx = optionsTa.length - 1;
-            }
+            // Correct index is unknown if sanitized from server; only known if re-practicing
+            const hasKnownCorrect = typeof q.correctOriginalIndex === 'number' || typeof q.correct === 'number';
+            const correctIdx = hasKnownCorrect 
+                ? (typeof q.correctOriginalIndex === 'number' ? q.correctOriginalIndex : q.correct)
+                : null;
 
-            // Combine options with correct index tracking
             let optionsObj = optionsTa.map((optText, optIdx) => ({
                 textTa: String(optText || ''),
                 textEn: String(optionsEn[optIdx] || optText || ''),
-                isCorrect: optIdx === correctIdx,
+                isCorrect: correctIdx !== null ? optIdx === correctIdx : false,
                 originalIndex: optIdx
             }));
 
@@ -71,12 +72,12 @@ class QuizEngine {
 
             return {
                 id: q.id || (originalIdx + 1),
-                questionTa: q.question || q.question_en || '',
-                questionEn: q.question_en || q.question || '',
+                questionTa: q.question || q.question_en || q.questionTa || '',
+                questionEn: q.question_en || q.question || q.questionEn || '',
                 options: optionsObj,
                 correctOriginalIndex: correctIdx,
-                explanationTa: q.explanation || q.explanation_en || '',
-                explanationEn: q.explanation_en || q.explanation || '',
+                explanationTa: q.explanation || q.explanation_en || q.explanationTa || '',
+                explanationEn: q.explanation_en || q.explanation || q.explanationEn || '',
                 image: resolvedImg,
                 explanationImage: resolvedExpImg
             };
@@ -156,7 +157,11 @@ class QuizEngine {
                 if (this.remainingSeconds <= 0) {
                     this.remainingSeconds = 0;
                     this.stopTimer();
-                    this.submitQuiz(true); // Auto submit on timeout
+                    if (this.onSubmitExam) {
+                        this.onSubmitExam(true); // Auto submit on timeout
+                    } else {
+                        this.submitQuiz(true);
+                    }
                     return;
                 }
             }
@@ -221,7 +226,7 @@ class QuizEngine {
         const q = this.getCurrentQuestion();
         if (!q) return null;
 
-        // In practice mode, once answered you can't change
+        // In practice mode, once verified you can't re-select
         if (this.config.mode === 'practice' && this.userAnswers[this.currentIndex] !== undefined) {
             return this.userAnswers[this.currentIndex];
         }
@@ -229,21 +234,108 @@ class QuizEngine {
         const opt = q.options[optionIdx];
         if (!opt) return null;
 
-        const isCorrect = opt.isCorrect;
-
         this.userAnswers[this.currentIndex] = {
             selectedOptionIndex: optionIdx,
             selectedOriginalIndex: opt.originalIndex,
-            isCorrect: isCorrect
+            isCorrect: opt.isCorrect || false
         };
 
         return this.userAnswers[this.currentIndex];
+    }
+
+    /**
+     * Updates question with verified server answer in Practice Mode
+     */
+    applyServerCheck(questionIndex, checkResult) {
+        const q = this.questions[questionIndex];
+        if (!q) return;
+
+        q.correctOriginalIndex = checkResult.correctIndex;
+        q.explanationTa = checkResult.explanation || '';
+        q.explanationEn = checkResult.explanation_en || '';
+        if (checkResult.explanationImage) {
+            q.explanationImage = this.resolveImage(this.config.subjectId, checkResult.explanationImage);
+        }
+
+        // Mark options
+        q.options.forEach(opt => {
+            opt.isCorrect = (opt.originalIndex === checkResult.correctIndex);
+        });
+
+        if (this.userAnswers[questionIndex]) {
+            this.userAnswers[questionIndex].isCorrect = checkResult.isCorrect;
+        }
     }
 
     getAnswerStatus(index) {
         return this.userAnswers[index] || null;
     }
 
+    /**
+     * Applies official server results after Exam submission
+     */
+    applyExamResults(serverResults, autoSubmitted = false) {
+        this.stopTimer();
+        this.isCompleted = true;
+
+        if (serverResults && Array.isArray(serverResults.review)) {
+            const reviewMap = new Map();
+            serverResults.review.forEach(r => reviewMap.set(Number(r.id), r));
+
+            this.questions.forEach((q, idx) => {
+                const r = reviewMap.get(Number(q.id));
+                if (r) {
+                    q.correctOriginalIndex = r.correctIndex;
+                    q.explanationTa = r.explanation || '';
+                    q.explanationEn = r.explanation_en || '';
+                    if (r.explanationImage) {
+                        q.explanationImage = this.resolveImage(this.config.subjectId, r.explanationImage);
+                    }
+
+                    q.options.forEach(opt => {
+                        opt.isCorrect = (opt.originalIndex === r.correctIndex);
+                    });
+
+                    if (this.userAnswers[idx]) {
+                        this.userAnswers[idx].isCorrect = r.isCorrect;
+                    } else if (r.selectedOptionIndex !== null) {
+                        // Locate matching option index in potentially shuffled array
+                        const optIndex = q.options.findIndex(o => o.originalIndex === r.selectedOptionIndex);
+                        this.userAnswers[idx] = {
+                            selectedOptionIndex: optIndex >= 0 ? optIndex : r.selectedOptionIndex,
+                            selectedOriginalIndex: r.selectedOptionIndex,
+                            isCorrect: r.isCorrect
+                        };
+                    }
+                }
+            });
+        }
+
+        const results = {
+            totalQuestions: serverResults.totalQuestions || this.questions.length,
+            correctCount: serverResults.correctCount || 0,
+            wrongCount: serverResults.wrongCount || 0,
+            unattemptedCount: serverResults.unattemptedCount || 0,
+            percentage: serverResults.percentage || 0,
+            accuracy: serverResults.accuracy || 0,
+            timeElapsedSeconds: this.timeElapsedSeconds,
+            formattedTime: this.formatTime(this.timeElapsedSeconds),
+            autoSubmitted: autoSubmitted,
+            userAnswers: this.userAnswers,
+            questions: this.questions,
+            config: this.config
+        };
+
+        if (this.onQuizComplete) {
+            this.onQuizComplete(results);
+        }
+
+        return results;
+    }
+
+    /**
+     * Fallback local evaluation (used if re-practicing locally known wrong questions)
+     */
     submitQuiz(autoSubmitted = false) {
         this.stopTimer();
         this.isCompleted = true;

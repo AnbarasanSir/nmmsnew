@@ -479,13 +479,39 @@
     <!-- Toast Notifications Container -->
     <div class="toast-container" id="toast-container"></div>
 
-    <!-- Scripts (All Self-Contained & Offline-Ready) -->
+    <!-- Scripts -->
     <script src="vendor/katex/katex.min.js"></script>
     <script src="vendor/katex/auto-render.min.js"></script>
     <script src="js/metadata.js"></script>
     <script src="js/image-map.js"></script>
-    <script src="js/data/matquiz.js"></script>
     <script src="js/quiz-engine.js"></script>
     <script src="js/app.js"></script>
+
+    <!-- Client-side Anti-Copy & Anti-Inspection Protection -->
+    <script>
+        (function() {
+            // Prevent right click
+            document.addEventListener('contextmenu', function(e) {
+                // Allow right click only on editable inputs if any
+                if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+                    e.preventDefault();
+                }
+            });
+
+            // Prevent DevTools & save/print shortcuts
+            document.addEventListener('keydown', function(e) {
+                if (
+                    e.key === 'F12' || 
+                    (e.ctrlKey && (e.key === 'u' || e.key === 'U')) || 
+                    (e.ctrlKey && (e.key === 's' || e.key === 'S')) || 
+                    (e.ctrlKey && (e.key === 'p' || e.key === 'P')) || 
+                    (e.ctrlKey && e.shiftKey && ['i', 'I', 'j', 'J', 'c', 'C'].includes(e.key))
+                ) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            }, true);
+        })();
+    </script>
 </body>
 </html>

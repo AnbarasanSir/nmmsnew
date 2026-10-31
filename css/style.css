@@ -1113,7 +1113,17 @@ body.in-arena-mode .app-main {
   color: var(--warning);
 }
 
-/* Question Card */
+/* Question Card & Anti-Copy Protection */
+.question-card,
+.option-btn,
+.review-card,
+#view-arena {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
 .question-card {
   flex: 1;
   padding: 14px 12px 100px; /* space for sticky footer */

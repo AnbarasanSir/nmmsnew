@@ -422,77 +422,35 @@ class NMMSApp {
     }
 
     // ==========================================
-    // MULTI-TIER DATA LOADER (WORKS ON file:// & http://)
+    // SECURE API DATA LOADER
     // ==========================================
-    loadSubjectScript(subjectId) {
-        return new Promise((resolve) => {
-            if (!subjectId) return resolve();
-            const scriptId = `script-data-${subjectId}`;
-            if (document.getElementById(scriptId)) {
-                return resolve();
-            }
-
-            const script = document.createElement('script');
-            script.id = scriptId;
-            script.src = `js/data/${subjectId}.js`;
-            script.onload = () => {
-                console.log(`[NMMS] Loaded data bundle for ${subjectId}`);
-                resolve();
-            };
-            script.onerror = (e) => {
-                console.warn(`[NMMS] Script bundle js/data/${subjectId}.js not loaded, will try fetch:`, e);
-                resolve(); // Resolve anyway so caller can attempt fallback
-            };
-            document.head.appendChild(script);
-        });
-    }
-
     async loadUnitQuestions(subjectId, unit) {
+        const cleanUnit = unit.id || (unit.file ? unit.file.replace(/^.*[\\\/]/, '').replace(/\.json$/, '') : 'unit1');
+        const cacheKey = `${subjectId}:${cleanUnit}`;
+
         // 1. In-memory dataCache
-        if (this.dataCache[unit.file]) {
-            return this.dataCache[unit.file];
+        if (this.dataCache[cacheKey]) {
+            return this.dataCache[cacheKey];
         }
 
-        // 2. Pre-loaded window.NMMS_DATA bundle
-        if (window.NMMS_DATA && window.NMMS_DATA[unit.file]) {
-            this.dataCache[unit.file] = window.NMMS_DATA[unit.file];
-            return this.dataCache[unit.file];
-        }
-
-        // 3. Try HTTP fetch if protocol is http or https
-        if (window.location.protocol && window.location.protocol.startsWith('http')) {
-            try {
-                const response = await fetch(unit.file);
-                if (response.ok) {
-                    const data = await response.json();
-                    this.dataCache[unit.file] = data;
-                    return data;
-                }
-            } catch (err) {
-                console.warn('[NMMS] HTTP fetch failed, trying script bundle:', err);
-            }
-        }
-
-        // 4. Fallback: dynamically load subject data bundle (works on file:// protocol seamlessly!)
-        await this.loadSubjectScript(subjectId);
-        if (window.NMMS_DATA && window.NMMS_DATA[unit.file]) {
-            this.dataCache[unit.file] = window.NMMS_DATA[unit.file];
-            return this.dataCache[unit.file];
-        }
-
-        // 5. Last resort: direct fetch attempt
+        // 2. Fetch sanitized questions from Secure Backend API
+        const apiUrl = `/api/quiz/questions?subject=${encodeURIComponent(subjectId)}&unit=${encodeURIComponent(cleanUnit)}`;
         try {
-            const response = await fetch(unit.file);
-            if (response.ok) {
-                const data = await response.json();
-                this.dataCache[unit.file] = data;
-                return data;
+            const response = await fetch(apiUrl);
+            if (!response.ok) {
+                throw new Error(`Server returned HTTP ${response.status}`);
             }
-        } catch (finalErr) {
-            console.error('[NMMS] Final fetch failed:', finalErr);
+            const data = await response.json();
+            if (data.success && Array.isArray(data.questions) && data.questions.length > 0) {
+                this.dataCache[cacheKey] = data.questions;
+                return data.questions;
+            } else {
+                throw new Error(data.error || 'Failed to load questions from secure API');
+            }
+        } catch (err) {
+            console.error('[NMMS] Secure API load failed:', err);
+            throw err;
         }
-
-        throw new Error('Unable to load questions for ' + unit.file);
     }
 
     // ==========================================
@@ -552,6 +510,10 @@ class NMMSApp {
 
         this.quizEngine.onQuizComplete = (results) => {
             this.handleQuizFinished(results);
+        };
+
+        this.quizEngine.onSubmitExam = (autoSubmitted) => {
+            this.submitExam(autoSubmitted);
         };
 
         this.setupPaletteUI();
@@ -878,18 +840,127 @@ class NMMSApp {
         QuizEngine.renderMathInElement(expBox);
     }
 
-    handleOptionSelection(optIdx, btnElement) {
-        const result = this.quizEngine.selectOption(optIdx);
-        if (!result) return;
+    async handleOptionSelection(optIdx, btnElement) {
+        if (this.quizEngine.isCompleted) return;
 
-        if (this.quizEngine.config.mode === 'practice') {
-            this.playSound(result.isCorrect ? 'correct' : 'wrong');
-        } else {
+        const q = this.quizEngine.getCurrentQuestion();
+        if (!q) return;
+
+        // In practice mode, once verified you can't change
+        if (this.quizEngine.config.mode === 'practice' && this.quizEngine.userAnswers[this.quizEngine.currentIndex] !== undefined) {
+            return;
+        }
+
+        // Exam Mode: Instant local response
+        if (this.quizEngine.config.mode === 'exam') {
+            this.quizEngine.selectOption(optIdx);
             this.playSound('click');
+            this.renderCurrentQuestion();
+            this.updatePaletteActiveState();
+            return;
+        }
+
+        // Practice Mode: Check with server or local if already known
+        const opt = q.options[optIdx];
+        if (!opt) return;
+
+        // If question already has known correct index (e.g. mistakes review)
+        if (typeof q.correctOriginalIndex === 'number') {
+            const result = this.quizEngine.selectOption(optIdx);
+            if (result) {
+                this.playSound(result.isCorrect ? 'correct' : 'wrong');
+            }
+            this.renderCurrentQuestion();
+            this.updatePaletteActiveState();
+            return;
+        }
+
+        // Record selection immediately for UI feedback
+        this.quizEngine.selectOption(optIdx);
+        if (btnElement) {
+            btnElement.classList.add('selected');
+        }
+
+        try {
+            const response = await fetch('/api/quiz/check', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    subject: this.quizEngine.config.subjectId,
+                    unit: this.quizEngine.config.unitId,
+                    questionId: q.id,
+                    selectedOptionIndex: opt.originalIndex
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Server returned HTTP ' + response.status);
+            }
+
+            const checkData = await response.json();
+            if (checkData.success) {
+                this.quizEngine.applyServerCheck(this.quizEngine.currentIndex, checkData);
+                this.playSound(checkData.isCorrect ? 'correct' : 'wrong');
+            } else {
+                throw new Error(checkData.error || 'Failed to verify answer');
+            }
+        } catch (err) {
+            console.error('Check answer error:', err);
+            this.showToast(this.language === 'ta' ? 'விடை சரிபார்ப்பில் பிழை ஏற்பட்டது!' : 'Error verifying answer with server!', 'danger');
         }
 
         this.renderCurrentQuestion();
         this.updatePaletteActiveState();
+    }
+
+    async submitExam(autoSubmitted = false) {
+        if (this.quizEngine.isCompleted) return;
+
+        this.showToast(this.language === 'ta' ? 'தேர்வு முடிவுகள் கணக்கிடப்படுகின்றன...' : 'Evaluating exam results...', 'info');
+
+        // Check if all questions already have known answers (e.g. from local mistakes practice)
+        const allQuestionsHaveAnswers = this.quizEngine.questions.every(q => typeof q.correctOriginalIndex === 'number');
+        if (allQuestionsHaveAnswers) {
+            this.quizEngine.submitQuiz(autoSubmitted);
+            return;
+        }
+
+        const answers = {};
+        this.quizEngine.questions.forEach((q, idx) => {
+            const ans = this.quizEngine.userAnswers[idx];
+            if (ans && ans.selectedOriginalIndex !== undefined) {
+                answers[q.id] = ans.selectedOriginalIndex;
+            }
+        });
+        const questionIds = this.quizEngine.questions.map(q => q.id);
+
+        try {
+            const response = await fetch('/api/quiz/submit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    subject: this.quizEngine.config.subjectId,
+                    unit: this.quizEngine.config.unitId,
+                    answers: answers,
+                    questionIds: questionIds
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`Server returned HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+            if (data.success && data.results) {
+                this.quizEngine.applyExamResults(data.results, autoSubmitted);
+            } else {
+                throw new Error(data.error || 'Failed to compute exam results');
+            }
+        } catch (err) {
+            console.error('Submit exam error:', err);
+            this.showToast(this.language === 'ta' ? 'முடிவுகளை கணக்கிடுவதில் பிழை ஏற்பட்டது!' : 'Error calculating results with server!', 'danger');
+            this.quizEngine.submitQuiz(autoSubmitted); // Fallback
+        }
     }
 
     updateBookmarkButtonState(question) {
@@ -1196,7 +1267,7 @@ class NMMSApp {
         });
         document.getElementById('btn-submit-exam')?.addEventListener('click', () => {
             if (confirm(this.language === 'ta' ? 'தேர்வை சமர்ப்பிக்க விரும்புகிறீர்களா?' : 'Do you want to submit and complete the quiz?')) {
-                this.quizEngine.submitQuiz(false);
+                this.submitExam(false);
             }
         });
 

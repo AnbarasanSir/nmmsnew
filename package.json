@@ -1,12 +1,12 @@
 {
   "name": "nmms-quiz-website",
-  "version": "1.0.0",
-  "description": "Comprehensive Bilingual Quiz Platform for NMMS Scholarship Examination (11,600+ Questions)",
+  "version": "2.0.0",
+  "description": "Comprehensive Bilingual Quiz Platform for NMMS Scholarship Examination (11,600+ Questions) with Secure Backend API",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "build": "node build-metadata.js && node build-image-map.js && node build-data-bundles.js",
-    "build:meta": "node build-metadata.js && node build-image-map.js && node build-data-bundles.js",
+    "build": "node build-metadata.js && node build-image-map.js",
+    "build:meta": "node build-metadata.js && node build-image-map.js",
     "deploy": "npx wrangler pages deploy ."
   },
   "keywords": [
