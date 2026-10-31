@@ -72,6 +72,17 @@ class NMMSApp {
     // VIEW ROUTING
     // ==========================================
     showView(viewId) {
+        // Prevent accidental exit from active quiz
+        if (this.currentView === 'arena' && viewId !== 'arena' && viewId !== 'results' && !this.quizEngine.isCompleted) {
+            const confirmMsg = this.language === 'en' 
+                ? 'Are you sure you want to exit the NMMS exam?' 
+                : 'NMMS தேர்விலிருந்து வெளியேற விரும்புகிறீர்களா?';
+            if (!confirm(confirmMsg)) {
+                return;
+            }
+            this.quizEngine.stopTimer();
+        }
+
         this.currentView = viewId;
         document.querySelectorAll('.view-section').forEach(sec => {
             sec.classList.remove('active');
@@ -91,6 +102,11 @@ class NMMSApp {
             document.body.classList.add('in-arena-mode');
             if (tabbar) tabbar.classList.add('hidden');
             if (header) header.style.display = 'none';
+
+            // Push history state to intercept browser back button
+            try {
+                history.pushState({ inQuiz: true }, '');
+            } catch (e) {}
         } else {
             document.body.classList.remove('in-arena-mode');
             if (tabbar) tabbar.classList.remove('hidden');
@@ -1265,9 +1281,41 @@ class NMMSApp {
 
         // Arena Exit
         document.getElementById('btn-exit-quiz')?.addEventListener('click', () => {
-            if (confirm(this.language === 'ta' ? 'தேர்வை விட்டு வெளியேற வேண்டுமா?' : 'Are you sure you want to exit the quiz?')) {
+            const confirmMsg = this.language === 'en' 
+                ? 'Are you sure you want to exit the NMMS exam?' 
+                : 'NMMS தேர்விலிருந்து வெளியேற விரும்புகிறீர்களா?';
+            if (confirm(confirmMsg)) {
                 this.quizEngine.stopTimer();
                 this.showView('subject');
+            }
+        });
+
+        // Prevent accidental tab close, reload or leaving page while in active exam
+        window.addEventListener('beforeunload', (e) => {
+            if (this.currentView === 'arena' && !this.quizEngine.isCompleted) {
+                const message = this.language === 'en'
+                    ? 'Are you sure you want to exit the NMMS exam?'
+                    : 'NMMS தேர்விலிருந்து வெளியேற விரும்புகிறீர்களா?';
+                e.preventDefault();
+                e.returnValue = message;
+                return message;
+            }
+        });
+
+        // Intercept browser back button / swipe back gesture while in active exam
+        window.addEventListener('popstate', () => {
+            if (this.currentView === 'arena' && !this.quizEngine.isCompleted) {
+                const confirmMsg = this.language === 'en' 
+                    ? 'Are you sure you want to exit the NMMS exam?' 
+                    : 'NMMS தேர்விலிருந்து வெளியேற விரும்புகிறீர்களா?';
+                if (confirm(confirmMsg)) {
+                    this.quizEngine.stopTimer();
+                    this.showView('subject');
+                } else {
+                    try {
+                        history.pushState({ inQuiz: true }, '');
+                    } catch (err) {}
+                }
             }
         });
 
