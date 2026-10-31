@@ -1284,9 +1284,7 @@ class NMMSApp {
             this.updatePaletteActiveState();
         });
         document.getElementById('btn-submit-exam')?.addEventListener('click', () => {
-            if (confirm(this.language === 'ta' ? 'தேர்வை சமர்ப்பிக்க விரும்புகிறீர்களா?' : 'Do you want to submit and complete the quiz?')) {
-                this.submitExam(false);
-            }
+            this.submitExam(false);
         });
 
         // Modal Controls
