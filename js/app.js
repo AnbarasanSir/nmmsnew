@@ -32,10 +32,24 @@ class NMMSApp {
         this.setupSwipeNavigation();
         this.updateUserStatsDisplay();
 
-        // Seed initial history state for Home page so exit confirmation can be prompted on back
+        // Arm history trap for Home page
+        this.armHomeExitTrap();
+
+        const armOnTouch = () => {
+            if (this.currentView === 'home') {
+                this.armHomeExitTrap();
+            }
+            window.removeEventListener('click', armOnTouch);
+            window.removeEventListener('touchstart', armOnTouch);
+        };
+        window.addEventListener('click', armOnTouch);
+        window.addEventListener('touchstart', armOnTouch);
+    }
+
+    armHomeExitTrap() {
         try {
-            history.replaceState({ view: 'home_base' }, '');
-            history.pushState({ view: 'home' }, '');
+            history.replaceState({ isHomeBase: true }, '', window.location.href);
+            history.pushState({ isHomeTrap: true }, '', window.location.href);
         } catch (e) {}
     }
 
@@ -77,14 +91,14 @@ class NMMSApp {
     // ==========================================
     // VIEW ROUTING
     // ==========================================
-    showView(viewId) {
+    showView(viewId, force = false) {
         // Prevent accidental exit from active quiz
-        if (this.currentView === 'arena' && viewId !== 'arena' && viewId !== 'results' && !this.quizEngine.isCompleted) {
+        if (!force && this.currentView === 'arena' && viewId !== 'arena' && viewId !== 'results' && !this.quizEngine.isCompleted) {
             const confirmMsg = this.language === 'en' 
                 ? 'Are you sure you want to exit the NMMS exam?' 
                 : 'NMMS தேர்விலிருந்து வெளியேற விரும்புகிறீர்களா?';
             if (!confirm(confirmMsg)) {
-                return;
+                return false;
             }
             this.quizEngine.stopTimer();
         }
@@ -111,16 +125,20 @@ class NMMSApp {
 
             // Push history state to intercept browser back button
             try {
-                history.pushState({ inQuiz: true }, '');
+                history.pushState({ inQuiz: true }, '', window.location.href);
             } catch (e) {}
         } else {
             document.body.classList.remove('in-arena-mode');
             if (tabbar) tabbar.classList.remove('hidden');
             if (header) header.style.display = '';
 
-            try {
-                history.pushState({ view: viewId }, '');
-            } catch (e) {}
+            if (viewId === 'home') {
+                this.armHomeExitTrap();
+            } else {
+                try {
+                    history.pushState({ view: viewId }, '', window.location.href);
+                } catch (e) {}
+            }
 
             // Update bottom tab bar active states
             const homeTab = document.getElementById('tab-home');
@@ -131,6 +149,7 @@ class NMMSApp {
             if (bmarkTab) bmarkTab.classList.toggle('active', viewId === 'bookmarks');
             if (histTab) histTab.classList.toggle('active', viewId === 'history');
         }
+        return true;
     }
 
     // ==========================================
@@ -1302,15 +1321,20 @@ class NMMSApp {
             this.showView('home');
         });
 
+        // Exit App Button on Header
+        document.getElementById('btn-exit-app')?.addEventListener('click', () => {
+            const confirmMsg = this.language === 'en'
+                ? 'Do you want to exit the NMMS portal?'
+                : 'NMMS தளத்திலிருந்து வெளியேற விரும்புகிறீர்களா?';
+            if (confirm(confirmMsg)) {
+                window.close();
+                history.back();
+            }
+        });
+
         // Arena Exit
         document.getElementById('btn-exit-quiz')?.addEventListener('click', () => {
-            const confirmMsg = this.language === 'en' 
-                ? 'Are you sure you want to exit the NMMS exam?' 
-                : 'NMMS தேர்விலிருந்து வெளியேற விரும்புகிறீர்களா?';
-            if (confirm(confirmMsg)) {
-                this.quizEngine.stopTimer();
-                this.showView('subject');
-            }
+            this.showView('subject');
         });
 
         // Prevent accidental tab close, reload or leaving page
@@ -1322,8 +1346,8 @@ class NMMSApp {
                     : 'NMMS தேர்விலிருந்து வெளியேற விரும்புகிறீர்களா?';
             } else if (this.currentView === 'home') {
                 message = this.language === 'en'
-                    ? 'Do you want to exit the NMMS website?'
-                    : 'NMMS வலைதளத்திலிருந்து வெளியேற விரும்புகிறீர்களா?';
+                    ? 'Do you want to exit the NMMS portal?'
+                    : 'NMMS தளத்திலிருந்து வெளியேற விரும்புகிறீர்களா?';
             }
 
             if (message) {
@@ -1345,10 +1369,10 @@ class NMMSApp {
                     : 'NMMS தேர்விலிருந்து வெளியேற விரும்புகிறீர்களா?';
                 if (confirm(confirmMsg)) {
                     this.quizEngine.stopTimer();
-                    this.showView('subject');
+                    this.showView('subject', true);
                 } else {
                     try {
-                        history.pushState({ inQuiz: true }, '');
+                        history.pushState({ inQuiz: true }, '', window.location.href);
                     } catch (err) {}
                 }
                 return;
@@ -1357,21 +1381,20 @@ class NMMSApp {
             // 2. If currently on Home page (User pressing back to exit the site)
             if (this.currentView === 'home') {
                 const confirmMsg = this.language === 'en' 
-                    ? 'Do you want to exit the NMMS website?' 
-                    : 'NMMS வலைதளத்திலிருந்து வெளியேற விரும்புகிறீர்களா?';
+                    ? 'Do you want to exit the NMMS portal?' 
+                    : 'NMMS தளத்திலிருந்து வெளியேற விரும்புகிறீர்களா?';
                 if (confirm(confirmMsg)) {
                     isExitingWebsite = true;
+                    window.close();
                     history.back();
                 } else {
-                    try {
-                        history.pushState({ view: 'home' }, '');
-                    } catch (err) {}
+                    this.armHomeExitTrap();
                 }
                 return;
             }
 
             // 3. From other sub-views (subject, bookmarks, history, results), go back to home
-            this.showView('home');
+            this.showView('home', true);
         });
 
         // Arena Next / Prev / Flag / Submit
