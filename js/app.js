@@ -31,6 +31,12 @@ class NMMSApp {
         this.setupKeyboardShortcuts();
         this.setupSwipeNavigation();
         this.updateUserStatsDisplay();
+
+        // Seed initial history state for Home page so exit confirmation can be prompted on back
+        try {
+            history.replaceState({ view: 'home_base' }, '');
+            history.pushState({ view: 'home' }, '');
+        } catch (e) {}
     }
 
     // ==========================================
@@ -111,6 +117,10 @@ class NMMSApp {
             document.body.classList.remove('in-arena-mode');
             if (tabbar) tabbar.classList.remove('hidden');
             if (header) header.style.display = '';
+
+            try {
+                history.pushState({ view: viewId }, '');
+            } catch (e) {}
 
             // Update bottom tab bar active states
             const homeTab = document.getElementById('tab-home');
@@ -1303,20 +1313,32 @@ class NMMSApp {
             }
         });
 
-        // Prevent accidental tab close, reload or leaving page while in active exam
+        // Prevent accidental tab close, reload or leaving page
         window.addEventListener('beforeunload', (e) => {
+            let message = '';
             if (this.currentView === 'arena' && !this.quizEngine.isCompleted) {
-                const message = this.language === 'en'
+                message = this.language === 'en'
                     ? 'Are you sure you want to exit the NMMS exam?'
                     : 'NMMS தேர்விலிருந்து வெளியேற விரும்புகிறீர்களா?';
+            } else if (this.currentView === 'home') {
+                message = this.language === 'en'
+                    ? 'Do you want to exit the NMMS website?'
+                    : 'NMMS வலைதளத்திலிருந்து வெளியேற விரும்புகிறீர்களா?';
+            }
+
+            if (message) {
                 e.preventDefault();
                 e.returnValue = message;
                 return message;
             }
         });
 
-        // Intercept browser back button / swipe back gesture while in active exam
+        // Intercept browser back button / swipe back gesture
+        let isExitingWebsite = false;
         window.addEventListener('popstate', () => {
+            if (isExitingWebsite) return;
+
+            // 1. If currently in Quiz Arena
             if (this.currentView === 'arena' && !this.quizEngine.isCompleted) {
                 const confirmMsg = this.language === 'en' 
                     ? 'Are you sure you want to exit the NMMS exam?' 
@@ -1329,7 +1351,27 @@ class NMMSApp {
                         history.pushState({ inQuiz: true }, '');
                     } catch (err) {}
                 }
+                return;
             }
+
+            // 2. If currently on Home page (User pressing back to exit the site)
+            if (this.currentView === 'home') {
+                const confirmMsg = this.language === 'en' 
+                    ? 'Do you want to exit the NMMS website?' 
+                    : 'NMMS வலைதளத்திலிருந்து வெளியேற விரும்புகிறீர்களா?';
+                if (confirm(confirmMsg)) {
+                    isExitingWebsite = true;
+                    history.back();
+                } else {
+                    try {
+                        history.pushState({ view: 'home' }, '');
+                    } catch (err) {}
+                }
+                return;
+            }
+
+            // 3. From other sub-views (subject, bookmarks, history, results), go back to home
+            this.showView('home');
         });
 
         // Arena Next / Prev / Flag / Submit
